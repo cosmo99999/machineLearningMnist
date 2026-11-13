@@ -6,3 +6,5 @@
 - once a model has been trained, the parameters are saved to a binary file
 - the executable can be passed no args to train a new model, or passed a filename of an existing model
 - barebones usage of the curses lib to test the model with your own digits!
+<img width="637" height="524" alt="image" src="https://github.com/user-attachments/assets/171f6069-4c98-47f5-804b-82720dff5d70" />
+- an image of the testing process, the above line representing expected and bottom line of the models prediction
