@@ -6,10 +6,25 @@
 #include <time.h>
 #include <unistd.h>
 
-void print_image(u_int8_t* data){
+void print_image_brightness(u_int8_t* data){
   for(int i = 0; i < 28; i++){
     for(int j = 0; j < 28; j++){
       printf("%-4d", data[i * 28 + j]);
+    }
+    printf("\n");
+  }
+  printf("\n");
+}
+
+void print_image(u_int8_t* data){
+  for(int i = 0; i < 28; i++){
+    for(int j = 0; j < 28; j++){
+      u_int8_t value = data[i * 28 + j];
+      if(value){
+        printf("00");
+      }else{
+        printf("--");
+      }
     }
     printf("\n");
   }
@@ -563,10 +578,6 @@ void back_propagate(Model* model, training_structure *t_data, float learning_rat
     p_deriv_sigmoid_matrix(&t_data->a[k], &fZ[k]);
     //dl
     if(k < model->c_layers - 1){
-      int m_val = dZprev->rows;
-      int n_val = dZprev->cols;
-      int k_val = model->layers[k + 1].weights.rows;
-      // matrix_mult_transpose_b(dZprev, &model->layers[k + 1].weights, dA);
       matrix_mult_transpose_b(dZprev, &model->layers[k + 1].weights, &dA[k]);
     }else{
       dl_da_output_layer(&t_data->a[k], t_data->expected, &dA[k], batch_size);
@@ -576,11 +587,7 @@ void back_propagate(Model* model, training_structure *t_data, float learning_rat
 
     Matrix* prev_activation = k == 0 ? t_data->input : &t_data->a[k - 1];
 
-    int m_val = prev_activation->rows;
-    int k_val = prev_activation->cols;
-    int n_val = dZ->cols;
     matrix_mult_transpose_a(prev_activation, dZ, &t_data->g_w[k]);
-    // matrix_mult_transpose_a(prev_activation, dZ, &t_data->g_w[k]);
 
     matrix_sum_rows(dZ, &t_data->g_b[k]);
   }
@@ -614,10 +621,11 @@ float test(Model* model, data_set* testing_data, int image_count){
     convert_labels_to_expected_matrix(temp_label, t_data.expected, 1);
 
     forward_pass(model, t_data.input, t_data.z, t_data.a);
-    // print_matrix(&t_data.a[model->c_layers - 1]);
-    // print_matrix(t_data.expected);
     
     int result = validate_prediction(&t_data.a[model->c_layers - 1], t_data.expected);
+    print_image(temp_data);
+    print_matrix(t_data.expected);
+    print_matrix(&t_data.a[model->c_layers - 1]);
     if(result)
       correct++;
     else 
@@ -634,9 +642,6 @@ float test(Model* model, data_set* testing_data, int image_count){
 int test_single(Model* model, void* data){
   training_structure t_data = create_training_structure(model, 1);
 
-  // endwin();
-  // print_image(data);
-  // exit(0);
   convert_images_to_input_matrix(data, t_data.input, 1);
 
   forward_pass(model, t_data.input, t_data.z, t_data.a);
@@ -695,9 +700,6 @@ void train(Model* model, training_args* args, data_set* training_data, data_set*
       for(int j = 0; j < model->c_layers;j++){
         Matrix* w = &model->layers[j].weights;
         Matrix* b = &model->layers[j].biases;
-        // print_matrix(&t_struct.g_b[j]);
-        // print_matrix(&t_struct.g_w[j]);
-        // exit(0);
         matrix_sub_with_learnrate(w, &t_struct.g_w[j], w, args->learning_rate);
         matrix_sub_with_learnrate(b, &t_struct.g_b[j], b, args->learning_rate);
       }
